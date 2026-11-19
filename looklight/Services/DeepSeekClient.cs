@@ -29,25 +29,35 @@ public sealed class DeepSeekClient : IDeepSeekClient
         "如果输入是句子而不是单词或短语，请给出整句翻译和简要语法说明，不必给释义、例句和变形。" +
         "回答请使用 Markdown 格式，简洁直接，不要多余的开场白和客套话。";
 
+    /// <summary>输入为纯中文时追加的要求：先给一行简单英文释义。</summary>
+    public const string ChineseInputNote =
+        "当用户输入是纯中文词语时，请在整个回答的最开头先用一行给出简单的英文释义，" +
+        "格式为：**英文释义**：<对应的英文单词或短语>（<词性>）— <一句简短英文解释>，" +
+        "然后再按上述格式继续回答。";
+
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(60) };
 
     private readonly IConfigService _configService;
 
     public DeepSeekClient(IConfigService configService) => _configService = configService;
 
-    public async Task<string> QueryAsync(string input, CancellationToken ct = default)
+    public async Task<string> QueryAsync(string input, bool chineseOnly = false, CancellationToken ct = default)
     {
         var config = _configService.Config;
         if (string.IsNullOrWhiteSpace(config.ApiKey))
             throw new InvalidOperationException(
                 $"尚未配置 API Key，请编辑配置文件：{_configService.ConfigPath}");
 
+        var systemPrompt = chineseOnly
+            ? PromptTemplate + "\n\n" + ChineseInputNote
+            : PromptTemplate;
+
         var payload = new
         {
             model = config.Model,
             messages = new object[]
             {
-                new { role = "system", content = PromptTemplate },
+                new { role = "system", content = systemPrompt },
                 new { role = "user", content = input }
             },
             temperature = 0.3

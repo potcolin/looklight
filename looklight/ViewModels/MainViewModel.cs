@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using looklight.Services;
 using Prism.Commands;
 using Prism.Mvvm;
@@ -6,6 +7,10 @@ namespace looklight.ViewModels;
 
 public class MainViewModel : BindableBase
 {
+    /// <summary>纯中文输入判定（基本区 + 扩展 A 区，允许首尾空白）。</summary>
+    private static readonly Regex ChineseOnlyRegex =
+        new(@"^\s*[\u3400-\u4dbf\u4e00-\u9fff]+\s*$", RegexOptions.Compiled);
+
     private readonly IDeepSeekClient _client;
     private readonly IConfigService _configService;
 
@@ -51,6 +56,9 @@ public class MainViewModel : BindableBase
 
     public DelegateCommand QueryCommand { get; }
 
+    /// <summary>一次查询结束（无论成功或失败）后触发，视图借此把焦点交还输入框。</summary>
+    public event EventHandler? QueryCompleted;
+
     public MainViewModel(IConfigService configService, IDeepSeekClient client)
     {
         _configService = configService;
@@ -83,7 +91,7 @@ public class MainViewModel : BindableBase
 
         try
         {
-            ResultMarkdown = await _client.QueryAsync(input);
+            ResultMarkdown = await _client.QueryAsync(input, ChineseOnlyRegex.IsMatch(input));
             StatusText = "完成";
         }
         catch (Exception ex)
@@ -94,6 +102,7 @@ public class MainViewModel : BindableBase
         finally
         {
             IsBusy = false;
+            QueryCompleted?.Invoke(this, EventArgs.Empty);
         }
     }
 }
