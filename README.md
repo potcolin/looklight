@@ -1,2 +1,4 @@
 # looklight
-replace my youdao application.
+
+有道词典实在太恶心了，自己写一个调用deepseek token的简单查询软件。
+就实现一个功能：输入单词、词语、句子，使用固定询问模板，调用deepseek，界面显示结果；软件可通过alt+m快捷键唤醒和托盘到最小化。
