@@ -51,11 +51,9 @@
                 CornerRadius="4"
                 Background="White"
                 Margin="0,0,0,6">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <md:MarkdownViewer Markdown="{Binding ResultMarkdown}"
-                                   FontSize="14"
-                                   Margin="10"/>
-            </ScrollViewer>
+            <!-- MarkdownViewer 模板内部已是 FlowDocumentScrollViewer，外面不能再套 ScrollViewer：
+                 那样内层拿不到有限高度就不会滚动，却仍把滚轮事件标记为已处理。 -->
+            <md:MarkdownViewer Markdown="{Binding ResultMarkdown}" />
         </Border>
 
         <!-- 状态栏 -->
