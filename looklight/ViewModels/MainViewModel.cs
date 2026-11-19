@@ -38,11 +38,16 @@ public class MainViewModel : BindableBase
         private set
         {
             if (SetProperty(ref _isBusy, value))
+            {
                 RaisePropertyChanged(nameof(QueryButtonText));
+                RaisePropertyChanged(nameof(IsNotBusy));
+            }
         }
     }
 
     public string QueryButtonText => IsBusy ? "查询中…" : "查询";
+
+    public bool IsNotBusy => !IsBusy;
 
     public DelegateCommand QueryCommand { get; }
 
@@ -53,7 +58,8 @@ public class MainViewModel : BindableBase
 
         QueryCommand = new DelegateCommand(
             async () => await QueryAsync(),
-            () => !IsBusy);
+            () => !IsBusy)
+            .ObservesProperty(() => IsBusy);
 
         StatusText = string.IsNullOrEmpty(configService.Config.ApiKey)
             ? $"未配置 API Key，请编辑 {configService.ConfigPath}"
@@ -62,6 +68,8 @@ public class MainViewModel : BindableBase
 
     private async Task QueryAsync()
     {
+        if (IsBusy) return;
+
         var input = InputText.Trim();
         if (input.Length == 0)
         {

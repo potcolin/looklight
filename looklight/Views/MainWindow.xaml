@@ -31,6 +31,7 @@
                      Padding="6,8"
                      FontSize="15"
                      VerticalContentAlignment="Center"
+                     IsEnabled="{Binding IsNotBusy}"
                      Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}">
                 <TextBox.InputBindings>
                     <KeyBinding Key="Enter" Command="{Binding QueryCommand}"/>
