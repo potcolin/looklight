@@ -1,4 +1,4 @@
-namespace looklight.Services;
+namespace looklight.Services.Interfaces;
 
 public interface IDeepSeekClient
 {

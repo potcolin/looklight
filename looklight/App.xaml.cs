@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Windows;
 using looklight.Services;
+using looklight.Services.Interfaces;
 using looklight.ViewModels;
 using looklight.Views;
 using Prism.DryIoc;

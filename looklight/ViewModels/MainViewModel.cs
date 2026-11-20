@@ -2,7 +2,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using looklight.Services;
+using looklight.Services.Interfaces;
 using Prism.Commands;
 using Prism.Mvvm;
 

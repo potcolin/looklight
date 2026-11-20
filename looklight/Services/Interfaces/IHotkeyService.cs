@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace looklight.Services;
+namespace looklight.Services.Interfaces;
 
 /// <summary>
 /// 全局热键（Alt+M）：Attach 到窗口后，按下热键触发 HotkeyPressed。

@@ -1,4 +1,6 @@
-namespace looklight.Services;
+using looklight.Services;
+
+namespace looklight.Services.Interfaces;
 
 public interface IConfigService
 {

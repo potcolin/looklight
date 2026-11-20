@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
-using looklight.Services;
+using looklight.Services.Interfaces;
 using Prism;
 using Prism.Ioc;
 
