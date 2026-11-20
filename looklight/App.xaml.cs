@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Windows;
 using looklight.Services;
 using looklight.ViewModels;
@@ -13,6 +14,38 @@ namespace looklight
     /// </summary>
     public partial class App : PrismApplication
     {
+        // 当前登录会话内的单实例互斥体（不带 Global\ 前缀，每个用户会话可各跑一份）
+        private const string SingleInstanceMutexName = "looklight.SingleInstance";
+
+        private Mutex? _singleInstanceMutex;
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            // 没抢到互斥体说明已有实例在运行（含最小化到托盘的情况），直接静默退出
+            _singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out var createdNew);
+            if (!createdNew)
+            {
+                _singleInstanceMutex.Dispose();
+                _singleInstanceMutex = null;
+                Shutdown();
+                return;
+            }
+
+            base.OnStartup(e);
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            if (_singleInstanceMutex is not null)
+            {
+                _singleInstanceMutex.ReleaseMutex();
+                _singleInstanceMutex.Dispose();
+                _singleInstanceMutex = null;
+            }
+
+            base.OnExit(e);
+        }
+
         protected override Window CreateShell() => Container.Resolve<MainWindow>();
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
