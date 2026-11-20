@@ -1,5 +1,5 @@
 {
   "ApiKey": "sk-4ad3da44e86344c1a4a54c4a6b2f9251",
   "Endpoint": "https://api.deepseek.com/chat/completions",
-  "Model": "deepseek-chat"
+  "Model": "deepseek-flash"
 }

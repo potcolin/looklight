@@ -60,7 +60,9 @@ public sealed class DeepSeekClient : IDeepSeekClient
                 new { role = "system", content = systemPrompt },
                 new { role = "user", content = input }
             },
-            temperature = 0.3
+            temperature = 0.3,
+            // 词典查询用不上推理：关掉默认开启的思考模式，省下思维链那部分输出 token，也快得多
+            thinking = new { type = "disabled" }
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, config.Endpoint)
