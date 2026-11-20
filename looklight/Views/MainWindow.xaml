@@ -4,128 +4,202 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:md="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:prism="http://prismlibrary.com/"
         xmlns:shell="clr-namespace:looklight.Behaviors"
         prism:ViewModelLocator.AutoWireViewModel="True"
         shell:ShellBehavior.Enabled="True"
         mc:Ignorable="d"
-        Title="looklight" Height="520" Width="720"
-        MinHeight="320" MinWidth="480"
+        Title="looklight"
+        Height="560" Width="760" MinHeight="380" MinWidth="520"
         WindowStartupLocation="CenterScreen"
-        Background="#F7F7F7">
+        Style="{StaticResource MaterialDesignWindow}"
+        FontFamily="{DynamicResource MaterialDesignFont}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
-    <Grid Margin="12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <DockPanel>
+        <!-- 应用栏 -->
+        <materialDesign:ColorZone DockPanel.Dock="Top"
+                                  Mode="PrimaryMid"
+                                  Padding="14,10"
+                                  materialDesign:ElevationAssist.Elevation="Dp3">
+            <DockPanel>
+                <materialDesign:PackIcon Kind="BookOpenVariant"
+                                         Width="22" Height="22"
+                                         Margin="0,0,10,0"
+                                         VerticalAlignment="Center"
+                                         Foreground="White"/>
+                <Button DockPanel.Dock="Right"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        Width="36" Height="36"
+                        Foreground="White"
+                        ToolTip="设置 API Key"
+                        Command="{Binding ToggleSettingsCommand}">
+                    <materialDesign:PackIcon Kind="Cog" Width="20" Height="20"/>
+                </Button>
+                <TextBlock Text="looklight"
+                           FontSize="18"
+                           FontWeight="Medium"
+                           VerticalAlignment="Center"
+                           Foreground="White"/>
+            </DockPanel>
+        </materialDesign:ColorZone>
 
-        <!-- 输入区 -->
-        <Grid Grid.Row="0" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox x:Name="InputBox"
-                     Grid.Column="0"
-                     Padding="6,8"
-                     FontSize="15"
-                     VerticalContentAlignment="Center"
-                     IsEnabled="{Binding IsNotBusy}"
-                     Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Enter" Command="{Binding QueryCommand}"/>
-                </TextBox.InputBindings>
-            </TextBox>
-            <Button Grid.Column="1"
-                    Margin="8,0,0,0"
-                    Padding="18,6"
-                    Command="{Binding QueryCommand}"
-                    Content="{Binding QueryButtonText}"/>
-        </Grid>
+        <!-- 底部状态栏 -->
+        <Border DockPanel.Dock="Bottom" Padding="14,6" Background="Transparent">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusText}"
+                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1"
+                           Text="Alt+M 显示/隐藏 · 关闭窗口最小化到托盘"
+                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                           Opacity="0.6"
+                           Margin="12,0,0,0"/>
+            </Grid>
+        </Border>
 
-        <!-- API Key 设置面板：Key 只存 %APPDATA%，不写进仓库里的 config.json -->
-        <Border Grid.Row="1"
-                Margin="0,0,0,8"
-                Padding="10,8"
-                BorderBrush="#E8D9A8"
-                BorderThickness="1"
-                CornerRadius="4"
-                Background="#FFFBF2DC"
-                Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}">
-            <StackPanel>
-                <TextBlock TextWrapping="Wrap"
-                           Foreground="#7A6A3A"
-                           Text="API Key 只保存在本机（%APPDATA%\looklight\settings.json），不会写入仓库里的 config.json。"/>
-                <Grid Margin="0,8,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <PasswordBox x:Name="ApiKeyBox"
-                                 Grid.Column="0"
-                                 Padding="6,6"
-                                 FontSize="14"
-                                 VerticalContentAlignment="Center"
-                                 shell:PasswordBoxBehavior.BoundPassword="{Binding ApiKeyInput, Mode=TwoWay}">
-                        <PasswordBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding SaveApiKeyCommand}"/>
-                        </PasswordBox.InputBindings>
-                    </PasswordBox>
-                    <Button Grid.Column="1"
-                            Margin="8,0,0,0"
-                            Padding="14,4"
-                            Content="保存"
-                            Command="{Binding SaveApiKeyCommand}"/>
-                    <Button Grid.Column="2"
-                            Margin="8,0,0,0"
-                            Padding="14,4"
-                            Content="取消"
-                            Command="{Binding ToggleSettingsCommand}"/>
-                    <Button Grid.Column="3"
-                            Margin="8,0,0,0"
-                            Padding="10,4"
-                            Content="获取 Key"
-                            ToolTip="在浏览器中打开 DeepSeek 平台的 API Keys 页面"
-                            Command="{Binding OpenApiKeyPageCommand}"/>
+        <Grid Margin="14,12,14,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 输入区 -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="InputBox"
+                         Grid.Column="0"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         materialDesign:HintAssist.Hint="输入单词、短语或句子"
+                         materialDesign:TextFieldAssist.HasClearButton="True"
+                         FontSize="15"
+                         IsEnabled="{Binding IsNotBusy}"
+                         Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding QueryCommand}"/>
+                    </TextBox.InputBindings>
+                </TextBox>
+                <Button Grid.Column="1"
+                        Margin="10,0,0,0"
+                        MinWidth="100"
+                        Height="44"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Content="{Binding QueryButtonText}"
+                        Command="{Binding QueryCommand}"/>
+            </Grid>
+
+            <!-- 查询进度 -->
+            <ProgressBar Grid.Row="1"
+                         Height="3"
+                         Margin="0,2,0,0"
+                         Style="{StaticResource MaterialDesignLinearProgressBar}"
+                         IsIndeterminate="True"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+
+            <!-- API Key 设置面板：Key 只存 %APPDATA%，不写进仓库里的 config.json -->
+            <materialDesign:Card Grid.Row="2"
+                                 Margin="0,10,0,0"
+                                 Padding="14"
+                                 Style="{StaticResource MaterialDesignOutlinedCard}"
+                                 Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource MaterialDesignBody2TextBlock}"
+                               TextWrapping="Wrap"
+                               Opacity="0.75"
+                               Text="API Key 只保存在本机（%APPDATA%\looklight\settings.json），不会写入仓库里的 config.json。"/>
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox x:Name="ApiKeyBox"
+                                     Grid.Column="0"
+                                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                     materialDesign:HintAssist.Hint="API Key"
+                                     shell:PasswordBoxBehavior.BoundPassword="{Binding ApiKeyInput, Mode=TwoWay}">
+                            <PasswordBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SaveApiKeyCommand}"/>
+                            </PasswordBox.InputBindings>
+                        </PasswordBox>
+                        <Button Grid.Column="1"
+                                Margin="10,0,0,0"
+                                Height="40"
+                                VerticalAlignment="Bottom"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Content="保存"
+                                Command="{Binding SaveApiKeyCommand}"/>
+                        <Button Grid.Column="2"
+                                Margin="8,0,0,0"
+                                Height="40"
+                                VerticalAlignment="Bottom"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Content="取消"
+                                Command="{Binding ToggleSettingsCommand}"/>
+                        <Button Grid.Column="3"
+                                Margin="4,0,0,0"
+                                Height="40"
+                                VerticalAlignment="Bottom"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="获取 Key"
+                                ToolTip="在浏览器中打开 DeepSeek 平台的 API Keys 页面"
+                                Command="{Binding OpenApiKeyPageCommand}"/>
+                    </Grid>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- 结果区（Markdown 渲染） -->
+            <materialDesign:Card Grid.Row="3"
+                                 Margin="0,10,0,0"
+                                 Style="{StaticResource MaterialDesignElevatedCard}"
+                                 materialDesign:ElevationAssist.Elevation="Dp2">
+                <Grid>
+                    <!-- MarkdownViewer 模板内部已是 FlowDocumentScrollViewer，外面不能再套 ScrollViewer：
+                         那样内层拿不到有限高度就不会滚动，却仍把滚轮事件标记为已处理。 -->
+                    <md:MarkdownViewer Markdown="{Binding ResultMarkdown}"/>
+
+                    <!-- 空状态提示：有结果后自动隐藏 -->
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="False">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasResult}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <materialDesign:PackIcon Kind="TextSearch"
+                                                 Width="44" Height="44"
+                                                 HorizontalAlignment="Center"
+                                                 Opacity="0.25"/>
+                        <TextBlock Text="输入单词、短语或句子后按回车"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,0"
+                                   Opacity="0.45"
+                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                    </StackPanel>
                 </Grid>
-            </StackPanel>
-        </Border>
-
-        <!-- 结果区（Markdown 渲染） -->
-        <Border Grid.Row="2"
-                BorderBrush="#DDDDDD"
-                BorderThickness="1"
-                CornerRadius="4"
-                Background="White"
-                Margin="0,0,0,6">
-            <!-- MarkdownViewer 模板内部已是 FlowDocumentScrollViewer，外面不能再套 ScrollViewer：
-                 那样内层拿不到有限高度就不会滚动，却仍把滚轮事件标记为已处理。 -->
-            <md:MarkdownViewer Markdown="{Binding ResultMarkdown}" />
-        </Border>
-
-        <!-- 状态栏 -->
-        <StatusBar Grid.Row="3" Background="#EEEEEE">
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusText}"/>
-            </StatusBarItem>
-            <StatusBarItem>
-                <Button Content="设置 API Key"
-                        Padding="8,0"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Command="{Binding ToggleSettingsCommand}"/>
-            </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right">
-                <TextBlock Text="Alt+M 显示/隐藏 · 关闭窗口最小化到托盘" Foreground="#888888"/>
-            </StatusBarItem>
-        </StatusBar>
-    </Grid>
+            </materialDesign:Card>
+        </Grid>
+    </DockPanel>
 </Window>

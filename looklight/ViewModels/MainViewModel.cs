@@ -33,8 +33,15 @@ public class MainViewModel : BindableBase
     public string ResultMarkdown
     {
         get => _resultMarkdown;
-        set => SetProperty(ref _resultMarkdown, value);
+        set
+        {
+            if (SetProperty(ref _resultMarkdown, value))
+                RaisePropertyChanged(nameof(HasResult));
+        }
     }
+
+    /// <summary>结果区是否已有内容，视图用它决定要不要显示空状态提示。</summary>
+    public bool HasResult => !string.IsNullOrWhiteSpace(ResultMarkdown);
 
     public string StatusText
     {
