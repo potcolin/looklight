@@ -1,3 +1,5 @@
+using System.Collections;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using looklight.Services;
@@ -6,7 +8,7 @@ using Prism.Mvvm;
 
 namespace looklight.ViewModels;
 
-public class MainViewModel : BindableBase
+public class MainViewModel : BindableBase, INotifyDataErrorInfo
 {
     /// <summary>纯中文输入判定（基本区 + 扩展 A 区，允许首尾空白）。</summary>
     private static readonly Regex ChineseOnlyRegex =
@@ -14,8 +16,12 @@ public class MainViewModel : BindableBase
 
     private const string ApiKeyPageUrl = "https://platform.deepseek.com/api_keys";
 
+    /// <summary>查词用不到这么长的输入，挡住误粘贴整篇文章。</summary>
+    private const int MaxInputLength = 500;
+
     private readonly IDeepSeekClient _client;
     private readonly IConfigService _configService;
+    private readonly Dictionary<string, string> _errors = new();
 
     private string _inputText = "";
     private string _resultMarkdown = "";
@@ -27,7 +33,12 @@ public class MainViewModel : BindableBase
     public string InputText
     {
         get => _inputText;
-        set => SetProperty(ref _inputText, value);
+        set
+        {
+            if (!SetProperty(ref _inputText, value)) return;
+            // 用户一动输入就把错误提示收掉，别一直红着
+            SetValidationError(nameof(InputText), null);
+        }
     }
 
     public string ResultMarkdown
@@ -53,7 +64,11 @@ public class MainViewModel : BindableBase
     public string ApiKeyInput
     {
         get => _apiKeyInput;
-        set => SetProperty(ref _apiKeyInput, value);
+        set
+        {
+            if (!SetProperty(ref _apiKeyInput, value)) return;
+            SetValidationError(nameof(ApiKeyInput), null);
+        }
     }
 
     public bool IsSettingsOpen
@@ -87,6 +102,36 @@ public class MainViewModel : BindableBase
     /// <summary>一次查询结束（无论成功或失败）后触发，视图借此把焦点交还输入框。</summary>
     public event EventHandler? QueryCompleted;
 
+    /// <summary>输入没通过校验时触发，视图据此把光标放回输入框。</summary>
+    public event EventHandler? InputFocusRequested;
+
+    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+    public bool HasErrors => _errors.Count > 0;
+
+    public IEnumerable GetErrors(string? propertyName)
+        => propertyName is not null && _errors.TryGetValue(propertyName, out var error)
+            ? new[] { error }
+            : Array.Empty<string>();
+
+    /// <summary>设置/清除某个属性的校验错误；error 为 null 表示清除。</summary>
+    private void SetValidationError(string propertyName, string? error)
+    {
+        var had = _errors.ContainsKey(propertyName);
+        if (string.IsNullOrEmpty(error))
+        {
+            if (!had) return;
+            _errors.Remove(propertyName);
+        }
+        else
+        {
+            if (had && _errors[propertyName] == error) return;
+            _errors[propertyName] = error;
+        }
+
+        ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+    }
+
     public MainViewModel(IConfigService configService, IDeepSeekClient client)
     {
         _configService = configService;
@@ -111,6 +156,7 @@ public class MainViewModel : BindableBase
         var key = ApiKeyInput.Trim();
         if (key.Length == 0)
         {
+            SetValidationError(nameof(ApiKeyInput), "请输入 API Key");
             StatusText = "请输入 API Key";
             return;
         }
@@ -154,9 +200,21 @@ public class MainViewModel : BindableBase
         var input = InputText.Trim();
         if (input.Length == 0)
         {
+            SetValidationError(nameof(InputText), "请输入要查询的内容");
             StatusText = "请输入要查询的内容";
+            InputFocusRequested?.Invoke(this, EventArgs.Empty);
             return;
         }
+
+        if (input.Length > MaxInputLength)
+        {
+            SetValidationError(nameof(InputText), $"输入过长，请控制在 {MaxInputLength} 个字符以内");
+            StatusText = "输入过长";
+            InputFocusRequested?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        SetValidationError(nameof(InputText), null);
 
         IsBusy = true;
         StatusText = "正在查询…";

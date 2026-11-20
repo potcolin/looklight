@@ -12,9 +12,8 @@
 
   <ItemGroup>
     <None Update="config.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Update="Resource\colin.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <!-- 作为 Resource 嵌入，应用栏里可以直接用 pack URI 引用 -->
+    <Resource Include="Resource\colin.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,10 +21,6 @@
     <PackageReference Include="MaterialDesignThemes" Version="5.4.0" />
     <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
     <PackageReference Include="Prism.Wpf" Version="9.0.537" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resource\" />
   </ItemGroup>
 
 </Project>

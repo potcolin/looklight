@@ -13,34 +13,49 @@
         Title="looklight"
         Height="560" Width="760" MinHeight="380" MinWidth="520"
         WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
         Style="{StaticResource MaterialDesignWindow}"
         FontFamily="{DynamicResource MaterialDesignFont}">
+    <WindowChrome.WindowChrome>
+        <!-- 去掉系统标题栏（连带最小化/最大化/关闭按钮），但保留窗口边缘的拖拽缩放 -->
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
     <DockPanel>
-        <!-- 应用栏 -->
+        <!-- 应用栏：兼作标题栏，空白处按住可拖动窗口 -->
         <materialDesign:ColorZone DockPanel.Dock="Top"
                                   Mode="PrimaryMid"
-                                  Padding="14,10"
-                                  materialDesign:ElevationAssist.Elevation="Dp3">
+                                  Padding="14,4"
+                                  materialDesign:ElevationAssist.Elevation="Dp3"
+                                  MouseLeftButtonDown="OnAppBarMouseLeftButtonDown">
             <DockPanel>
-                <materialDesign:PackIcon Kind="BookOpenVariant"
-                                         Width="22" Height="22"
-                                         Margin="0,0,10,0"
-                                         VerticalAlignment="Center"
-                                         Foreground="White"/>
-                <Button DockPanel.Dock="Right"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        Width="36" Height="36"
-                        Foreground="White"
-                        ToolTip="设置 API Key"
-                        Command="{Binding ToggleSettingsCommand}">
-                    <materialDesign:PackIcon Kind="Cog" Width="20" Height="20"/>
-                </Button>
+                <Image Source="/Resource/colin.ico"
+                       Width="20" Height="20"
+                       Margin="0,0,8,0"
+                       VerticalAlignment="Center"/>
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Width="32" Height="32"
+                            Foreground="White"
+                            ToolTip="设置 API Key"
+                            Command="{Binding ToggleSettingsCommand}">
+                        <materialDesign:PackIcon Kind="Cog" Width="18" Height="18"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Width="32" Height="32"
+                            Foreground="White"
+                            ToolTip="关闭到托盘"
+                            Click="OnCloseButtonClick">
+                        <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                    </Button>
+                </StackPanel>
                 <TextBlock Text="looklight"
-                           FontSize="18"
+                           FontSize="16"
                            FontWeight="Medium"
                            VerticalAlignment="Center"
                            Foreground="White"/>
@@ -83,12 +98,13 @@
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="InputBox"
                          Grid.Column="0"
+                         Margin="0,0,0,16"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          materialDesign:HintAssist.Hint="输入单词、短语或句子"
                          materialDesign:TextFieldAssist.HasClearButton="True"
                          FontSize="15"
                          IsEnabled="{Binding IsNotBusy}"
-                         Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}">
+                         Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}">
                     <TextBox.InputBindings>
                         <KeyBinding Key="Enter" Command="{Binding QueryCommand}"/>
                     </TextBox.InputBindings>
@@ -133,7 +149,7 @@
                                      Grid.Column="0"
                                      Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
                                      materialDesign:HintAssist.Hint="API Key"
-                                     shell:PasswordBoxBehavior.BoundPassword="{Binding ApiKeyInput, Mode=TwoWay}">
+                                     shell:PasswordBoxBehavior.BoundPassword="{Binding ApiKeyInput, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}">
                             <PasswordBox.InputBindings>
                                 <KeyBinding Key="Enter" Command="{Binding SaveApiKeyCommand}"/>
                             </PasswordBox.InputBindings>
