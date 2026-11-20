@@ -7,49 +7,79 @@ public class AppConfig
 {
     public string ApiKey { get; set; } = "";
     public string Endpoint { get; set; } = "https://api.deepseek.com/chat/completions";
-    public string Model { get; set; } = "deepseek-chat";
+    public string Model { get; set; } = "deepseek-flash";
+}
+
+/// <summary>用户自己填写、只存在本机的内容，不随仓库发布。</summary>
+public sealed class UserSettings
+{
+    public string ApiKey { get; set; } = "";
 }
 
 /// <summary>
-/// 配置读取自程序目录下的 config.json（由编译复制到输出目录），缺失时自动生成模板。
+/// Endpoint / Model 来自程序目录下随仓库发布的 config.json；
+/// API Key 只从用户目录的 settings.json 读取，避免真实密钥被提交。
 /// </summary>
 public sealed class ConfigService : IConfigService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     public AppConfig Config { get; }
-    public string ConfigPath { get; }
+    public string SettingsPath { get; }
 
     public ConfigService()
     {
-        ConfigPath = Path.Combine(AppContext.BaseDirectory, "config.json");
-        Config = Load();
+        var configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+        SettingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "looklight",
+            "settings.json");
+        Config = Load(configPath);
     }
 
-    private AppConfig Load()
+    public void SaveApiKey(string apiKey)
+    {
+        Config.ApiKey = apiKey;
+        WriteJson(SettingsPath, new UserSettings { ApiKey = apiKey });
+    }
+
+    private AppConfig Load(string configPath)
+    {
+        var config = new AppConfig();
+
+        // config.json 会随仓库发布，因此只取它的 Endpoint / Model；其中的 ApiKey 一律忽略，
+        // 免得有人把真实密钥写回这个会被提交的文件。
+        var shipped = ReadJson<AppConfig>(configPath);
+        if (shipped is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(shipped.Endpoint)) config.Endpoint = shipped.Endpoint;
+            if (!string.IsNullOrWhiteSpace(shipped.Model)) config.Model = shipped.Model;
+        }
+
+        var user = ReadJson<UserSettings>(SettingsPath);
+        if (user is not null && !string.IsNullOrWhiteSpace(user.ApiKey))
+            config.ApiKey = user.ApiKey;
+
+        return config;
+    }
+
+    private static T? ReadJson<T>(string path) where T : class
     {
         try
         {
-            if (File.Exists(ConfigPath))
-            {
-                var cfg = JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(ConfigPath));
-                if (cfg is not null) return cfg;
-            }
+            if (File.Exists(path))
+                return JsonSerializer.Deserialize<T>(File.ReadAllText(path));
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"读取配置失败: {ex.Message}");
+            Console.Error.WriteLine($"读取配置失败（{path}）: {ex.Message}");
         }
-
-        var fresh = new AppConfig();
-        Save(fresh);
-        return fresh;
+        return null;
     }
 
-    private void Save(AppConfig config)
+    private static void WriteJson<T>(string path, T value)
     {
-        var dir = Path.GetDirectoryName(ConfigPath)!;
-        Directory.CreateDirectory(dir);
-        File.WriteAllText(ConfigPath, JsonSerializer.Serialize(config, JsonOptions));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, JsonSerializer.Serialize(value, JsonOptions));
     }
 }

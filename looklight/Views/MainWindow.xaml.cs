@@ -14,6 +14,12 @@ namespace looklight.Views
             Closed += (_, _) => Attach(null);
             // Prism 在 InitializeComponent 期间就注入了 ViewModel，DataContextChanged 不会再触发，这里补一次
             Attach(DataContext as MainViewModel);
+
+            // 首次运行没有 Key 时设置面板会自动展开，直接把焦点放到密钥框
+            Loaded += (_, _) =>
+            {
+                if (ApiKeyBox.IsVisible) ApiKeyBox.Focus();
+            };
         }
 
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

@@ -13,8 +13,13 @@
         MinHeight="320" MinWidth="480"
         WindowStartupLocation="CenterScreen"
         Background="#F7F7F7">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
     <Grid Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -44,8 +49,58 @@
                     Content="{Binding QueryButtonText}"/>
         </Grid>
 
-        <!-- 结果区（Markdown 渲染） -->
+        <!-- API Key 设置面板：Key 只存 %APPDATA%，不写进仓库里的 config.json -->
         <Border Grid.Row="1"
+                Margin="0,0,0,8"
+                Padding="10,8"
+                BorderBrush="#E8D9A8"
+                BorderThickness="1"
+                CornerRadius="4"
+                Background="#FFFBF2DC"
+                Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <TextBlock TextWrapping="Wrap"
+                           Foreground="#7A6A3A"
+                           Text="API Key 只保存在本机（%APPDATA%\looklight\settings.json），不会写入仓库里的 config.json。"/>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <PasswordBox x:Name="ApiKeyBox"
+                                 Grid.Column="0"
+                                 Padding="6,6"
+                                 FontSize="14"
+                                 VerticalContentAlignment="Center"
+                                 shell:PasswordBoxBehavior.BoundPassword="{Binding ApiKeyInput, Mode=TwoWay}">
+                        <PasswordBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SaveApiKeyCommand}"/>
+                        </PasswordBox.InputBindings>
+                    </PasswordBox>
+                    <Button Grid.Column="1"
+                            Margin="8,0,0,0"
+                            Padding="14,4"
+                            Content="保存"
+                            Command="{Binding SaveApiKeyCommand}"/>
+                    <Button Grid.Column="2"
+                            Margin="8,0,0,0"
+                            Padding="14,4"
+                            Content="取消"
+                            Command="{Binding ToggleSettingsCommand}"/>
+                    <Button Grid.Column="3"
+                            Margin="8,0,0,0"
+                            Padding="10,4"
+                            Content="获取 Key"
+                            ToolTip="在浏览器中打开 DeepSeek 平台的 API Keys 页面"
+                            Command="{Binding OpenApiKeyPageCommand}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 结果区（Markdown 渲染） -->
+        <Border Grid.Row="2"
                 BorderBrush="#DDDDDD"
                 BorderThickness="1"
                 CornerRadius="4"
@@ -57,9 +112,16 @@
         </Border>
 
         <!-- 状态栏 -->
-        <StatusBar Grid.Row="2" Background="#EEEEEE">
+        <StatusBar Grid.Row="3" Background="#EEEEEE">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Button Content="设置 API Key"
+                        Padding="8,0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding ToggleSettingsCommand}"/>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
                 <TextBlock Text="Alt+M 显示/隐藏 · 关闭窗口最小化到托盘" Foreground="#888888"/>

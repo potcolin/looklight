@@ -45,8 +45,7 @@ public sealed class DeepSeekClient : IDeepSeekClient
     {
         var config = _configService.Config;
         if (string.IsNullOrWhiteSpace(config.ApiKey))
-            throw new InvalidOperationException(
-                $"尚未配置 API Key，请编辑配置文件：{_configService.ConfigPath}");
+            throw new InvalidOperationException("尚未配置 API Key，请点击主窗口的「设置 API Key」填写。");
 
         var systemPrompt = chineseOnly
             ? PromptTemplate + "\n\n" + ChineseInputNote
