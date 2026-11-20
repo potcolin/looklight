@@ -30,7 +30,7 @@
                                   Mode="PrimaryMid"
                                   Padding="14,4"
                                   materialDesign:ElevationAssist.Elevation="Dp3"
-                                  MouseLeftButtonDown="OnAppBarMouseLeftButtonDown">
+                                  shell:WindowBehavior.IsDragArea="True">
             <DockPanel>
                 <Image Source="/Resource/colin.ico"
                        Width="20" Height="20"
@@ -50,7 +50,7 @@
                             Width="32" Height="32"
                             Foreground="White"
                             ToolTip="关闭到托盘"
-                            Click="OnCloseButtonClick">
+                            shell:WindowBehavior.IsCloseButton="True">
                         <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
                     </Button>
                 </StackPanel>
@@ -104,6 +104,8 @@
                          materialDesign:TextFieldAssist.HasClearButton="True"
                          FontSize="15"
                          IsEnabled="{Binding IsNotBusy}"
+                         shell:FocusBehavior.IsBusy="{Binding IsBusy}"
+                         shell:FocusBehavior.RefocusOnValidationError="True"
                          Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}">
                     <TextBox.InputBindings>
                         <KeyBinding Key="Enter" Command="{Binding QueryCommand}"/>
@@ -145,10 +147,10 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <PasswordBox x:Name="ApiKeyBox"
-                                     Grid.Column="0"
+                        <PasswordBox Grid.Column="0"
                                      Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
                                      materialDesign:HintAssist.Hint="API Key"
+                                     shell:FocusBehavior.AutoFocus="True"
                                      shell:PasswordBoxBehavior.BoundPassword="{Binding ApiKeyInput, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}">
                             <PasswordBox.InputBindings>
                                 <KeyBinding Key="Enter" Command="{Binding SaveApiKeyCommand}"/>

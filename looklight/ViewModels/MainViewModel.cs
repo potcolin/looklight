@@ -99,12 +99,6 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
     public DelegateCommand ToggleSettingsCommand { get; }
     public DelegateCommand OpenApiKeyPageCommand { get; }
 
-    /// <summary>一次查询结束（无论成功或失败）后触发，视图借此把焦点交还输入框。</summary>
-    public event EventHandler? QueryCompleted;
-
-    /// <summary>输入没通过校验时触发，视图据此把光标放回输入框。</summary>
-    public event EventHandler? InputFocusRequested;
-
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
     public bool HasErrors => _errors.Count > 0;
@@ -202,7 +196,6 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
         {
             SetValidationError(nameof(InputText), "请输入要查询的内容");
             StatusText = "请输入要查询的内容";
-            InputFocusRequested?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -210,7 +203,6 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
         {
             SetValidationError(nameof(InputText), $"输入过长，请控制在 {MaxInputLength} 个字符以内");
             StatusText = "输入过长";
-            InputFocusRequested?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -233,7 +225,6 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
         finally
         {
             IsBusy = false;
-            QueryCompleted?.Invoke(this, EventArgs.Empty);
         }
     }
 }
