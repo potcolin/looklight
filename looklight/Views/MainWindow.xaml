@@ -14,6 +14,7 @@
         Height="560" Width="760" MinHeight="380" MinWidth="520"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
+        Topmost="{Binding IsTopMost}"
         Style="{StaticResource MaterialDesignWindow}"
         FontFamily="{DynamicResource MaterialDesignFont}">
     <WindowChrome.WindowChrome>
@@ -39,6 +40,24 @@
                 <StackPanel DockPanel.Dock="Right"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Width="32" Height="32"
+                            Foreground="White"
+                            ToolTip="窗口置顶（点击切换）"
+                            Command="{Binding ToggleTopMostCommand}">
+                        <materialDesign:PackIcon Width="18" Height="18">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="materialDesign:PackIcon">
+                                    <Setter Property="Kind" Value="PinOutline"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsTopMost}" Value="True">
+                                            <Setter Property="Kind" Value="Pin"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                    </Button>
                     <Button Style="{StaticResource MaterialDesignIconButton}"
                             Width="32" Height="32"
                             Foreground="White"

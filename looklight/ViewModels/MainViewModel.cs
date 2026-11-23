@@ -29,6 +29,7 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
     private string _apiKeyInput = "";
     private bool _isBusy;
     private bool _isSettingsOpen;
+    private bool _isTopMost = true;
 
     public string InputText
     {
@@ -77,6 +78,13 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
         set => SetProperty(ref _isSettingsOpen, value);
     }
 
+    /// <summary>主窗口是否置顶显示（默认开启），由应用栏的图钉按钮切换。</summary>
+    public bool IsTopMost
+    {
+        get => _isTopMost;
+        set => SetProperty(ref _isTopMost, value);
+    }
+
     public bool IsBusy
     {
         get => _isBusy;
@@ -97,6 +105,7 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
     public DelegateCommand QueryCommand { get; }
     public DelegateCommand SaveApiKeyCommand { get; }
     public DelegateCommand ToggleSettingsCommand { get; }
+    public DelegateCommand ToggleTopMostCommand { get; }
     public DelegateCommand OpenApiKeyPageCommand { get; }
 
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
@@ -138,6 +147,7 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
 
         SaveApiKeyCommand = new DelegateCommand(SaveApiKey);
         ToggleSettingsCommand = new DelegateCommand(() => IsSettingsOpen = !IsSettingsOpen);
+        ToggleTopMostCommand = new DelegateCommand(() => IsTopMost = !IsTopMost);
         OpenApiKeyPageCommand = new DelegateCommand(OpenApiKeyPage);
 
         // 没有 Key 时直接展开设置面板，省得用户对着"未配置"发呆却找不到入口
