@@ -21,6 +21,7 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
 
     private readonly IDeepSeekClient _client;
     private readonly IConfigService _configService;
+    private readonly IStartupService _startupService;
     private readonly Dictionary<string, string> _errors = new();
 
     private string _inputText = "";
@@ -30,6 +31,7 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
     private bool _isBusy;
     private bool _isSettingsOpen;
     private bool _isTopMost = true;
+    private bool _isAutoStartEnabled;
 
     public string InputText
     {
@@ -85,6 +87,31 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
         set => SetProperty(ref _isTopMost, value);
     }
 
+    /// <summary>
+    /// 开机自启动开关：改动直接落到 HKCU 的 Run 注册表项，成功后再记进 settings.json。
+    /// 写注册表失败时把开关拨回去，避免界面显示成已生效。
+    /// </summary>
+    public bool IsAutoStartEnabled
+    {
+        get => _isAutoStartEnabled;
+        set
+        {
+            if (_isAutoStartEnabled == value) return;
+
+            try
+            {
+                _startupService.SetEnabled(value);
+                SetProperty(ref _isAutoStartEnabled, value);
+                StatusText = value ? "已开启开机自启动" : "已关闭开机自启动";
+            }
+            catch (Exception ex)
+            {
+                RaisePropertyChanged();
+                StatusText = $"设置开机自启动失败：{ex.Message}";
+            }
+        }
+    }
+
     public bool IsBusy
     {
         get => _isBusy;
@@ -135,10 +162,14 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
 
-    public MainViewModel(IConfigService configService, IDeepSeekClient client)
+    public MainViewModel(IConfigService configService, IDeepSeekClient client, IStartupService startupService)
     {
         _configService = configService;
         _client = client;
+        _startupService = startupService;
+
+        // 以注册表为准：用户可能在外部删掉了启动项
+        _isAutoStartEnabled = startupService.IsEnabled;
 
         QueryCommand = new DelegateCommand(
             async () => await QueryAsync(),

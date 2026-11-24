@@ -15,18 +15,26 @@ public class AppConfig
 public sealed class UserSettings
 {
     public string ApiKey { get; set; } = "";
+
+    /// <summary>登录 Windows 后是否自动启动，由设置面板的开关写入。</summary>
+    public bool AutoStart { get; set; }
 }
 
 /// <summary>
 /// Endpoint / Model 来自程序目录下随仓库发布的 config.json；
-/// API Key 只从用户目录的 settings.json 读取，避免真实密钥被提交。
+/// API Key 与开机自启动开关只存在用户目录的 settings.json，避免被提交。
 /// </summary>
 public sealed class ConfigService : IConfigService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
+    // 始终保持这份实例，写 API Key / 自启动时整体落盘，避免互相覆盖
+    private readonly UserSettings _user;
+
     public AppConfig Config { get; }
     public string SettingsPath { get; }
+
+    public bool AutoStart => _user.AutoStart;
 
     public ConfigService()
     {
@@ -35,13 +43,24 @@ public sealed class ConfigService : IConfigService
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "looklight",
             "settings.json");
+
         Config = Load(configPath);
+        _user = ReadJson<UserSettings>(SettingsPath) ?? new UserSettings();
+        if (!string.IsNullOrWhiteSpace(_user.ApiKey))
+            Config.ApiKey = _user.ApiKey;
     }
 
     public void SaveApiKey(string apiKey)
     {
         Config.ApiKey = apiKey;
-        WriteJson(SettingsPath, new UserSettings { ApiKey = apiKey });
+        _user.ApiKey = apiKey;
+        WriteJson(SettingsPath, _user);
+    }
+
+    public void SaveAutoStart(bool enabled)
+    {
+        _user.AutoStart = enabled;
+        WriteJson(SettingsPath, _user);
     }
 
     private AppConfig Load(string configPath)
@@ -56,10 +75,6 @@ public sealed class ConfigService : IConfigService
             if (!string.IsNullOrWhiteSpace(shipped.Endpoint)) config.Endpoint = shipped.Endpoint;
             if (!string.IsNullOrWhiteSpace(shipped.Model)) config.Model = shipped.Model;
         }
-
-        var user = ReadJson<UserSettings>(SettingsPath);
-        if (user is not null && !string.IsNullOrWhiteSpace(user.ApiKey))
-            config.ApiKey = user.ApiKey;
 
         return config;
     }

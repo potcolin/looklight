@@ -61,7 +61,7 @@
                     <Button Style="{StaticResource MaterialDesignIconButton}"
                             Width="32" Height="32"
                             Foreground="White"
-                            ToolTip="设置 API Key"
+                            ToolTip="设置"
                             Command="{Binding ToggleSettingsCommand}">
                         <materialDesign:PackIcon Kind="Cog" Width="18" Height="18"/>
                     </Button>
@@ -198,6 +198,25 @@
                                 ToolTip="在浏览器中打开 DeepSeek 平台的 API Keys 页面"
                                 Command="{Binding OpenApiKeyPageCommand}"/>
                     </Grid>
+
+                    <Separator Margin="0,14,0,2" Background="{DynamicResource MaterialDesignDivider}"/>
+
+                    <!-- 开机自启动：写当前用户的启动项，不需要管理员权限 -->
+                    <DockPanel Margin="0,8,0,0">
+                        <ToggleButton DockPanel.Dock="Left"
+                                      VerticalAlignment="Center"
+                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                      ToolTip="登录 Windows 后自动启动 looklight"
+                                      IsChecked="{Binding IsAutoStartEnabled, Mode=TwoWay}"/>
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="开机自启动"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"/>
+                            <TextBlock Text="启动项写在当前用户下（注册表 Run），无需管理员权限；开关状态同时记在 settings.json"
+                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                       Opacity="0.6"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </DockPanel>
                 </StackPanel>
             </materialDesign:Card>
 

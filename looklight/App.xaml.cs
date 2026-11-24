@@ -33,6 +33,9 @@ namespace looklight
             }
 
             base.OnStartup(e);
+
+            // 程序可能被挪到别的目录，按设置把注册表里的启动项校正成当前路径
+            Container.Resolve<IStartupService>().Sync();
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -58,6 +61,7 @@ namespace looklight
             containerRegistry.RegisterSingleton<IDeepSeekClient, DeepSeekClient>();
             containerRegistry.RegisterSingleton<IHotkeyService, HotkeyService>();
             containerRegistry.RegisterSingleton<ITrayService, TrayService>();
+            containerRegistry.RegisterSingleton<IStartupService, StartupService>();
 
             containerRegistry.Register<MainWindow>();
             containerRegistry.Register<MainViewModel>();
