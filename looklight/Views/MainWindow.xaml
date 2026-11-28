@@ -24,6 +24,10 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
+    <Window.InputBindings>
+        <KeyBinding Key="D1" Modifiers="Control" Command="{Binding PlayBritishCommand}"/>
+        <KeyBinding Key="D2" Modifiers="Control" Command="{Binding PlayAmericanCommand}"/>
+    </Window.InputBindings>
 
     <DockPanel>
         <!-- 应用栏：兼作标题栏，空白处按住可拖动窗口 -->
@@ -114,6 +118,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="InputBox"
                          Grid.Column="0"
@@ -138,6 +143,38 @@
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Content="{Binding QueryButtonText}"
                         Command="{Binding QueryCommand}"/>
+
+                <!-- 发音：文本取自输入框，纯中文或过长时按钮自动禁用 -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center">
+                    <Button Height="44"
+                            Padding="10,0"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="播放英式发音（Ctrl+1）"
+                            Command="{Binding PlayBritishCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="VolumeHigh"
+                                                     Width="18" Height="18"
+                                                     VerticalAlignment="Center"/>
+                            <TextBlock Text="英" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Height="44"
+                            Padding="10,0"
+                            Margin="6,0,0,0"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="播放美式发音（Ctrl+2）"
+                            Command="{Binding PlayAmericanCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="VolumeHigh"
+                                                     Width="18" Height="18"
+                                                     VerticalAlignment="Center"/>
+                            <TextBlock Text="美" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
 
             <!-- 查询进度 -->

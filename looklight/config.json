@@ -1,4 +1,5 @@
 {
   "Endpoint": "https://api.deepseek.com/chat/completions",
-  "Model": "deepseek-flash"
+  "Model": "deepseek-flash",
+  "PronunciationSource": "youdao"
 }

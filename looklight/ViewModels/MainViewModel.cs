@@ -19,9 +19,13 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
     /// <summary>查词用不到这么长的输入，挡住误粘贴整篇文章。</summary>
     private const int MaxInputLength = 500;
 
+    /// <summary>句子也能朗读，但太长的内容不适合整段念出来。</summary>
+    private const int MaxSpeakLength = 200;
+
     private readonly IDeepSeekClient _client;
     private readonly IConfigService _configService;
     private readonly IStartupService _startupService;
+    private readonly IPronunciationService _pronunciation;
     private readonly Dictionary<string, string> _errors = new();
 
     private string _inputText = "";
@@ -29,6 +33,7 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
     private string _statusText = "";
     private string _apiKeyInput = "";
     private bool _isBusy;
+    private bool _isPreparingAudio;
     private bool _isSettingsOpen;
     private bool _isTopMost = true;
     private bool _isAutoStartEnabled;
@@ -129,11 +134,20 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
 
     public bool IsNotBusy => !IsBusy;
 
+    /// <summary>正在下载/启动发音，期间先挡住连点。</summary>
+    public bool IsPreparingAudio
+    {
+        get => _isPreparingAudio;
+        private set => SetProperty(ref _isPreparingAudio, value);
+    }
+
     public DelegateCommand QueryCommand { get; }
     public DelegateCommand SaveApiKeyCommand { get; }
     public DelegateCommand ToggleSettingsCommand { get; }
     public DelegateCommand ToggleTopMostCommand { get; }
     public DelegateCommand OpenApiKeyPageCommand { get; }
+    public DelegateCommand PlayBritishCommand { get; }
+    public DelegateCommand PlayAmericanCommand { get; }
 
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
@@ -162,11 +176,13 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
     }
 
-    public MainViewModel(IConfigService configService, IDeepSeekClient client, IStartupService startupService)
+    public MainViewModel(IConfigService configService, IDeepSeekClient client, IStartupService startupService,
+        IPronunciationService pronunciation)
     {
         _configService = configService;
         _client = client;
         _startupService = startupService;
+        _pronunciation = pronunciation;
 
         // 以注册表为准：用户可能在外部删掉了启动项
         _isAutoStartEnabled = startupService.IsEnabled;
@@ -176,14 +192,69 @@ public class MainViewModel : BindableBase, INotifyDataErrorInfo
             () => !IsBusy)
             .ObservesProperty(() => IsBusy);
 
+        PlayBritishCommand = new DelegateCommand(
+            async () => await PlayAsync(Accent.British),
+            CanPlay)
+            .ObservesProperty(() => InputText)
+            .ObservesProperty(() => IsPreparingAudio);
+
+        PlayAmericanCommand = new DelegateCommand(
+            async () => await PlayAsync(Accent.American),
+            CanPlay)
+            .ObservesProperty(() => InputText)
+            .ObservesProperty(() => IsPreparingAudio);
+
         SaveApiKeyCommand = new DelegateCommand(SaveApiKey);
         ToggleSettingsCommand = new DelegateCommand(() => IsSettingsOpen = !IsSettingsOpen);
         ToggleTopMostCommand = new DelegateCommand(() => IsTopMost = !IsTopMost);
         OpenApiKeyPageCommand = new DelegateCommand(OpenApiKeyPage);
 
+        // 音频开始播放后 MediaPlayer 才可能报解码错误，这里统一接到状态栏
+        pronunciation.PlaybackFailed += message => StatusText = $"播放发音失败：{message}";
+
         // 没有 Key 时直接展开设置面板，省得用户对着"未配置"发呆却找不到入口
         IsSettingsOpen = string.IsNullOrWhiteSpace(configService.Config.ApiKey);
         StatusText = IsSettingsOpen ? "尚未配置 API Key，请在下方填写" : "就绪";
+    }
+
+    /// <summary>
+    /// 只有英文内容才念：纯中文没有英文读音，超长内容也不适合整段朗读。
+    /// </summary>
+    private bool CanPlay()
+    {
+        if (IsPreparingAudio) return false;
+
+        var text = InputText.Trim();
+        return text.Length is > 0 and <= MaxSpeakLength && !ChineseOnlyRegex.IsMatch(text);
+    }
+
+    private async Task PlayAsync(Accent accent)
+    {
+        if (!CanPlay()) return;
+
+        var text = InputText.Trim();
+        var accentName = accent == Accent.British ? "英音" : "美音";
+
+        IsPreparingAudio = true;
+        StatusText = $"正在载入{accentName}…";
+
+        try
+        {
+            await _pronunciation.PlayAsync(text, accent);
+            StatusText = $"播放{accentName}";
+        }
+        catch (OperationCanceledException)
+        {
+            // 被下一次点击取消了，不算错误
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"{accentName}播放失败：{ex.Message}";
+        }
+        finally
+        {
+            IsPreparingAudio = false;
+        }
     }
 
     private void SaveApiKey()

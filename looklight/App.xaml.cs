@@ -2,6 +2,7 @@ using System.Threading;
 using System.Windows;
 using looklight.Services;
 using looklight.Services.Interfaces;
+using looklight.Services.Sources;
 using looklight.ViewModels;
 using looklight.Views;
 using Prism.DryIoc;
@@ -62,6 +63,8 @@ namespace looklight
             containerRegistry.RegisterSingleton<IHotkeyService, HotkeyService>();
             containerRegistry.RegisterSingleton<ITrayService, TrayService>();
             containerRegistry.RegisterSingleton<IStartupService, StartupService>();
+            containerRegistry.RegisterSingleton<IPronunciationSource, YoudaoVoiceSource>();
+            containerRegistry.RegisterSingleton<IPronunciationService, PronunciationService>();
 
             containerRegistry.Register<MainWindow>();
             containerRegistry.Register<MainViewModel>();

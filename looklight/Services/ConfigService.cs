@@ -9,6 +9,9 @@ public class AppConfig
     public string ApiKey { get; set; } = "";
     public string Endpoint { get; set; } = "https://api.deepseek.com/chat/completions";
     public string Model { get; set; } = "deepseek-flash";
+
+    /// <summary>优先使用的发音源名字，对应 IPronunciationSource.Name；其余已注册的源作为降级备用。</summary>
+    public string PronunciationSource { get; set; } = "youdao";
 }
 
 /// <summary>用户自己填写、只存在本机的内容，不随仓库发布。</summary>
@@ -67,13 +70,14 @@ public sealed class ConfigService : IConfigService
     {
         var config = new AppConfig();
 
-        // config.json 会随仓库发布，因此只取它的 Endpoint / Model；其中的 ApiKey 一律忽略，
+        // config.json 会随仓库发布，因此只取它的 Endpoint / Model / PronunciationSource；其中的 ApiKey 一律忽略，
         // 免得有人把真实密钥写回这个会被提交的文件。
         var shipped = ReadJson<AppConfig>(configPath);
         if (shipped is not null)
         {
             if (!string.IsNullOrWhiteSpace(shipped.Endpoint)) config.Endpoint = shipped.Endpoint;
             if (!string.IsNullOrWhiteSpace(shipped.Model)) config.Model = shipped.Model;
+            if (!string.IsNullOrWhiteSpace(shipped.PronunciationSource)) config.PronunciationSource = shipped.PronunciationSource;
         }
 
         return config;
